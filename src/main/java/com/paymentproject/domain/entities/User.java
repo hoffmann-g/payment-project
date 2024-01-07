@@ -2,6 +2,7 @@ package com.paymentproject.domain.entities;
 
 import java.math.BigDecimal;
 
+import com.paymentproject.domain.dtos.UserDTO;
 import com.paymentproject.domain.entities.enums.UserType;
 
 import jakarta.persistence.Column;
@@ -15,6 +16,7 @@ import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.EqualsAndHashCode;
 import lombok.Getter;
+import lombok.NoArgsConstructor;
 import lombok.Setter;
 
 @Entity
@@ -23,12 +25,14 @@ import lombok.Setter;
 @Setter
 @EqualsAndHashCode(of="id")
 @AllArgsConstructor
+@NoArgsConstructor
 
 public class User {
     
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
+    @Column(nullable = false)
     private String firstName;
     private String lastName;
 
@@ -42,5 +46,16 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private UserType userType;
+
+    public User(UserDTO data){
+        this.firstName = data.firstName();
+        this.lastName = data.lastName();
+        this.document = data.document();
+        this.email = data.document();
+        this.email = data.email();
+        this.password = data.password();
+        this.balance = data.balance();
+        this.userType = data.userType();
+    }
 }
 
