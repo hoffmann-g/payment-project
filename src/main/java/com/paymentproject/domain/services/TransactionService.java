@@ -2,20 +2,21 @@ package com.paymentproject.domain.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.Map;
+
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.core.ParameterizedTypeReference;
+import org.springframework.http.HttpMethod;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.web.client.RestTemplate;
 
-import com.fasterxml.jackson.databind.JsonNode;
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.paymentproject.domain.dtos.TransactionDTO;
 import com.paymentproject.domain.entities.Transaction;
 import com.paymentproject.domain.entities.User;
 import com.paymentproject.domain.entities.enums.UserType;
 import com.paymentproject.domain.respositories.TransactionRepository;
-import com.paymentproject.domain.services.exceptions.ServiceStatusException;
 import com.paymentproject.domain.services.exceptions.TransactionAuthorizationException;
 import com.paymentproject.domain.services.exceptions.TransactionValidationException;
 
@@ -29,40 +30,48 @@ public class TransactionService {
     private UserService userService;
 
     @Autowired
+    private NotificationService notificationService;
+
+    @Autowired
     private RestTemplate restTemplate;
     
     private String validatorAddress = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
 
     public Transaction save(TransactionDTO transactionDTO){
         User sender = this.userService.findById(transactionDTO.senderId());
-        User reciever = this.userService.findById(transactionDTO.recieverId());
-        BigDecimal value = transactionDTO.value();
+        User receiver = this.userService.findById(transactionDTO.receiverId());
+        BigDecimal amount = transactionDTO.amount();
 
-        validateTransaction(sender, value);
-        authorizeTransaction(sender, value);
+        validateTransaction(sender, amount);
+        authorizeTransaction();
 
-        Transaction transaction = new Transaction(null,  value, sender, reciever, LocalDateTime.now());
+        Transaction transaction = new Transaction(null,  amount, sender, receiver, LocalDateTime.now());
 
-        sender.getBalance().subtract(value);
-        reciever.getBalance().add(value);
+        sender.setBalance(sender.getBalance().subtract(amount));
+        receiver.setBalance(receiver.getBalance().add(amount));
 
-        userService.save(reciever);
-        userService.save(reciever);
+        userService.save(sender);
+        userService.save(receiver);
+
+        notificationService.sendNotification(sender, "Your transaction was successfully done to " + receiver.getFirstName() + ".");
+        notificationService.sendNotification(receiver, "You recieved " + amount + " from " + sender.getFirstName() + ".");
 
         return transactionRepository.save(transaction);
     }
 
-    private void authorizeTransaction(User sender, BigDecimal value){
-        ResponseEntity<String> authResponse = restTemplate.getForEntity(validatorAddress, String.class);
-        
-        try{
-            ObjectMapper objectMapper = new ObjectMapper();
-            JsonNode jsonNode = objectMapper.readTree(authResponse.getBody());
-            if (!(authResponse.getStatusCode() == HttpStatus.OK && jsonNode.get("message").asText().equalsIgnoreCase("Aprovado"))){
+    private void authorizeTransaction() {
+        ResponseEntity<Map<String, Object>> authResponse = restTemplate.exchange(
+                validatorAddress,
+                HttpMethod.GET,
+                null,
+                new ParameterizedTypeReference<Map<String, Object>>() {}
+        );
+
+        Map<String, Object> responseBody = authResponse.getBody();
+
+        if (!(authResponse.getStatusCode() == HttpStatus.OK && responseBody != null && 
+        String.valueOf(responseBody.get("message")).equalsIgnoreCase("Autorizado"))) {
             throw new TransactionAuthorizationException("Transaction denied");
-        }
-        } catch (Exception e){
-            throw new ServiceStatusException("External authorization service is offline ");
         }
     }
 
