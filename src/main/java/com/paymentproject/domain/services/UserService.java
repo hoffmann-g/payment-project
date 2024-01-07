@@ -25,8 +25,17 @@ public class UserService {
         return this.userRepository.save(user);
     }
 
-    public User save(UserDTO data){
-        User user = new User(data);
+    public User save(UserDTO userDTO){
+        User user = new User();
+
+        user.setFirstName(userDTO.firstName());
+        user.setLastName(userDTO.lastName());
+        user.setDocument(userDTO.document());
+        user.setEmail(userDTO.email());
+        user.setPassword(userDTO.password());
+        user.setBalance(userDTO.balance());
+        user.setUserType(userDTO.userType());
+
         return this.userRepository.save(user);
     }
 
