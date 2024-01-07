@@ -33,8 +33,8 @@ public class Transaction {
     private User sender;
 
     @ManyToOne
-    @JoinColumn(name="reciever_id")
-    private User reciever;
+    @JoinColumn(name="receiver_id")
+    private User receiver;
     private LocalDateTime timestamp;
     
 }
