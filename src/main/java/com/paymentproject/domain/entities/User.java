@@ -2,7 +2,6 @@ package com.paymentproject.domain.entities;
 
 import java.math.BigDecimal;
 
-import com.paymentproject.domain.dtos.UserDTO;
 import com.paymentproject.domain.entities.enums.UserType;
 
 import jakarta.persistence.Column;
@@ -46,16 +45,6 @@ public class User {
     
     @Enumerated(EnumType.STRING)
     private UserType userType;
-
-    public User(UserDTO data){
-        this.firstName = data.firstName();
-        this.lastName = data.lastName();
-        this.document = data.document();
-        this.email = data.document();
-        this.email = data.email();
-        this.password = data.password();
-        this.balance = data.balance();
-        this.userType = data.userType();
-    }
+    
 }
 
