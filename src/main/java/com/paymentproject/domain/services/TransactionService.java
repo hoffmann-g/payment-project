@@ -2,7 +2,9 @@ package com.paymentproject.domain.services;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
@@ -17,6 +19,7 @@ import com.paymentproject.domain.entities.Transaction;
 import com.paymentproject.domain.entities.User;
 import com.paymentproject.domain.entities.enums.UserType;
 import com.paymentproject.domain.respositories.TransactionRepository;
+import com.paymentproject.domain.services.exceptions.ResourceNotFoundException;
 import com.paymentproject.domain.services.exceptions.TransactionAuthorizationException;
 import com.paymentproject.domain.services.exceptions.TransactionValidationException;
 
@@ -59,6 +62,16 @@ public class TransactionService {
         return transactionRepository.save(transaction);
     }
 
+    public Transaction findById(Long id){
+        return this.transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+    }
+
+    public List<Transaction> findUserTransactions(Long id){
+        List<Transaction> transactionlList = transactionRepository.findAll();
+        List<Transaction> filteredList = transactionlList.stream().filter(t -> t.getSender().getId().equals(id)).collect(Collectors.toList());
+        return filteredList;
+    }
+
     private void authorizeTransaction() {
         ResponseEntity<Map<String, Object>> authResponse = restTemplate.exchange(
                 validatorAddress,
@@ -84,4 +97,5 @@ public class TransactionService {
             throw new TransactionValidationException("User's current balance is insuficient to complete transaction");
         }
     }
+
 }
