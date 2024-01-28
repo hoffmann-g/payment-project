@@ -34,10 +34,10 @@ public class TransactionService {
 
     @Autowired
     private RestTemplate restTemplate;
-    
+
     private String validatorAddress = "https://run.mocky.io/v3/5794d450-d2e2-4412-8131-73d0293ac1cc";
 
-    public Transaction save(TransactionDTO transactionDTO){
+    public Transaction save(TransactionDTO transactionDTO) {
         User sender = this.userService.findById(transactionDTO.senderId());
         User receiver = this.userService.findById(transactionDTO.receiverId());
         BigDecimal amount = transactionDTO.amount();
@@ -53,40 +53,41 @@ public class TransactionService {
         userService.save(sender);
         userService.save(receiver);
 
-        notificationService.sendNotification(sender, "Your transaction was successfully done to " + receiver.getFirstName() + ".");
-        notificationService.sendNotification(receiver, "You recieved " + amount + " from " + sender.getFirstName() + ".");
+        notificationService.sendNotification(sender,
+                "Your transaction was successfully done to " + receiver.getFirstName() + ".");
+        notificationService.sendNotification(receiver,
+                "You recieved " + amount + " from " + sender.getFirstName() + ".");
 
         return transactionRepository.save(transaction);
     }
 
-    public Transaction findById(Long id){
-        return this.transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
+    public Transaction findById(Long id) {
+        return this.transactionRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
     }
 
-    public List<Transaction> findAll(){
+    public List<Transaction> findAll() {
         return transactionRepository.findAll();
     }
-
 
     private void authorizeTransaction() {
         ResponseEntity<Map<String, Object>> authResponse = restTemplate.exchange(
                 validatorAddress,
                 HttpMethod.GET,
                 null,
-                new ParameterizedTypeReference<Map<String, Object>>() {}
-        );
+                new ParameterizedTypeReference<Map<String, Object>>() {
+                });
 
         Map<String, Object> responseBody = authResponse.getBody();
 
-        if (!(authResponse.getStatusCode() == HttpStatus.OK && responseBody != null && 
-        String.valueOf(responseBody.get("message")).equalsIgnoreCase("Autorizado"))) {
+        if (!(authResponse.getStatusCode() == HttpStatus.OK && responseBody != null &&
+                String.valueOf(responseBody.get("message")).equalsIgnoreCase("Autorizado"))) {
             throw new TransactionAuthorizationException("Transaction denied");
         }
     }
 
-
-    private void validateTransaction(User sender, BigDecimal amount){
-        if (sender.getBalance().compareTo(amount) < 0){
+    private void validateTransaction(User sender, BigDecimal amount) {
+        if (sender.getBalance().compareTo(amount) < 0) {
             throw new TransactionValidationException("User's current balance is insuficient to complete transaction");
         }
     }
