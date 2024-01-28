@@ -4,8 +4,6 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
-
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.ParameterizedTypeReference;
 import org.springframework.http.HttpMethod;
@@ -17,7 +15,6 @@ import org.springframework.web.client.RestTemplate;
 import com.paymentproject.domain.dtos.TransactionDTO;
 import com.paymentproject.domain.entities.Transaction;
 import com.paymentproject.domain.entities.User;
-import com.paymentproject.domain.entities.enums.UserType;
 import com.paymentproject.domain.respositories.TransactionRepository;
 import com.paymentproject.domain.services.exceptions.ResourceNotFoundException;
 import com.paymentproject.domain.services.exceptions.TransactionAuthorizationException;
@@ -48,7 +45,7 @@ public class TransactionService {
         validateTransaction(sender, amount);
         authorizeTransaction();
 
-        Transaction transaction = new Transaction(null,  amount, sender, receiver, LocalDateTime.now());
+        Transaction transaction = new Transaction(null, amount, sender, receiver, LocalDateTime.now());
 
         sender.setBalance(sender.getBalance().subtract(amount));
         receiver.setBalance(receiver.getBalance().add(amount));
@@ -66,11 +63,10 @@ public class TransactionService {
         return this.transactionRepository.findById(id).orElseThrow(() -> new ResourceNotFoundException("Transaction not found"));
     }
 
-    public List<Transaction> findUserTransactions(Long id){
-        List<Transaction> transactionlList = transactionRepository.findAll();
-        List<Transaction> filteredList = transactionlList.stream().filter(t -> t.getSender().getId().equals(id)).collect(Collectors.toList());
-        return filteredList;
+    public List<Transaction> findAll(){
+        return transactionRepository.findAll();
     }
+
 
     private void authorizeTransaction() {
         ResponseEntity<Map<String, Object>> authResponse = restTemplate.exchange(
@@ -90,9 +86,6 @@ public class TransactionService {
 
 
     private void validateTransaction(User sender, BigDecimal amount){
-        if (sender.getUserType() == UserType.MERCHANT){
-            throw new TransactionValidationException("'Merchant' user type is not allowed to make transactions");
-        }
         if (sender.getBalance().compareTo(amount) < 0){
             throw new TransactionValidationException("User's current balance is insuficient to complete transaction");
         }
