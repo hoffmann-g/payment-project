@@ -6,8 +6,12 @@ import org.springframework.data.jpa.repository.JpaRepository;
 
 import com.paymentproject.domain.entities.User;
 
-public interface UserRepository extends JpaRepository<User, Long>{
+public interface UserRepository extends JpaRepository<User, Long> {
+
+    Optional<User> findByDocument(String document);
     
-    Optional<User> findUserByDocument(String document);
-    Optional<User> findUserById(Long id);
+    boolean existsById(Long id);
+    boolean existsByDocument(String document);
+
+
 }

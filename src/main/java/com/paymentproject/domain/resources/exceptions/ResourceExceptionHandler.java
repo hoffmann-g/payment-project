@@ -12,7 +12,6 @@ import com.paymentproject.domain.services.exceptions.ResourceNotFoundException;
 import com.paymentproject.domain.services.exceptions.ServiceStatusException;
 import com.paymentproject.domain.services.exceptions.TransactionAuthorizationException;
 import com.paymentproject.domain.services.exceptions.TransactionValidationException;
-
 import jakarta.servlet.http.HttpServletRequest;
 
 @ControllerAdvice
@@ -57,6 +56,5 @@ public class ResourceExceptionHandler {
 		StandardError err = new StandardError(Instant.now(), status.value(), error, e.getMessage(), request.getRequestURI());
 		return ResponseEntity.status(status).body(err);
     }
-    
-    
 }
+
