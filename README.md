@@ -1,4 +1,4 @@
-# Spring Boot REST API
+# Spring Boot payment system
 [![NPM](https://img.shields.io/npm/l/react)](https://github.com/hoffmann-g/payment-project/blob/main/LICENSE)
 
 # About
